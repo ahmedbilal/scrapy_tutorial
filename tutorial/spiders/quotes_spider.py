@@ -9,7 +9,7 @@ class QuotesSpider(scrapy.Spider):
         for quote in response.xpath("//div[@class='quote']"):
             to_be_inserted = {}
             text = quote.xpath("string(span[@class='text'])").extract_first().replace("\u201c", "").replace("\u201d", "")
-            author = quote.xpath("span/small/text()").extract_first()
+            author = quote.xpath("span/small[@class='author']/text()").extract_first()
             tags = quote.xpath("div[@class='tags']")
 
             to_be_inserted['text'] = text
@@ -26,4 +26,3 @@ class QuotesSpider(scrapy.Spider):
             relative_url = response.xpath("//ul[@class='pager']/li[@class='next']/a/@href").extract_first()
             if relative_url:
                 yield response.follow(relative_url, callback=self.parse)
-            
