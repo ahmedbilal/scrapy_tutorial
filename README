@@ -1,0 +1,5 @@
+How to run author crawler
+-------------------------
+
+cd tutorial
+rm authors.jl; scrapy crawl author -o authors.jl
