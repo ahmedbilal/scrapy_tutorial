@@ -25,7 +25,7 @@ class AuthorSpider(scrapy.Spider):
 
     def parse(self, response):
         for quote in response.xpath("//div[@class='quote']"):
-            author_page_link = quote.xpath("span[2]/a/@href").extract_first()
+            author_page_link = quote.xpath("span/a/@href").extract_first()
             yield response.follow(author_page_link,  callback=self.parse_author)
         
         next_page = response.xpath("//li[@class='next']/a/@href").extract_first()
