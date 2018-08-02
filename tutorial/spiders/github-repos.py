@@ -16,14 +16,22 @@ class GithubRepos(scrapy.Spider):
                 repo_name = repo_name.split("/")[1]  # username/"repository"
                 print("REPO:", repo_name)
                 repo_link = repo.css("a::attr(href)").extract_first()
-
-                yield response.follow(repo_link + '/settings', 
-                meta={'url':response.urljoin(repo_link) + '/settings',
-                'dont_redirect': True,
-                'handle_httpstatus_all':True,
-                'dont_merge_cookies': True},
-                callback=self.read_name_from_settings,
-                dont_filter = True)
+                
+                if random.random() < 0.3:
+                    yield response.follow(repo_link + '/settings', 
+                    meta={'url':response.urljoin(repo_link) + '/settings',
+                    'dont_redirect': True,
+                    'handle_httpstatus_all':True,
+                    'dont_merge_cookies': True},
+                    callback=self.read_name_from_settings,
+                    dont_filter = True)
+                else:
+                    yield response.follow(repo_link + '/settings', 
+                    meta={'url':response.urljoin(repo_link) + '/settings',
+                    'dont_redirect': True,
+                    'handle_httpstatus_all':True},
+                    callback=self.read_name_from_settings,
+                    dont_filter = True)
         else:
             self.logger.info("User not logged in")
             yield Request(self.login_url, callback=self.login, meta={'url':self.start_urls[0]},
