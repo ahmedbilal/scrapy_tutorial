@@ -14,7 +14,7 @@ class GithubRepos(scrapy.Spider):
             for repo in response.css(".js-collab-repo"):
                 repo_name = repo.css("a::text").extract_first()
                 repo_name = repo_name.split("/")[1]  # username/"repository"
-                print("REPO:", repo_name)
+                self.logger.info("Repo: {}".format(repo_name))
                 repo_link = repo.css("a::attr(href)").extract_first()
                 
                 if random.random() < 0.3:
@@ -26,8 +26,8 @@ class GithubRepos(scrapy.Spider):
                     callback=self.read_name_from_settings,
                     dont_filter = True)
                 else:
-                    yield response.follow(repo_link + '/settings', 
-                    meta={'url':response.urljoin(repo_link) + '/settings',
+                    yield response.follow("{}/settings".format(repo_link), 
+                    meta={'url': "{}/settings".format(response.urljoin(repo_link)),
                     'dont_redirect': True,
                     'handle_httpstatus_all':True},
                     callback=self.read_name_from_settings,
@@ -40,10 +40,9 @@ class GithubRepos(scrapy.Spider):
 
     def login(self, response):
         authenticity_token = response.css("form input[name='authenticity_token']::attr(value)").extract_first()
-        print("authenticity: ", authenticity_token)
-        print("Logging for", response.meta['url'])
+        self.logger.info("Log in for {}".format(response.meta['url']))
         return scrapy.FormRequest.from_response(response,
-        formdata={'login':'meowmeow', 'password':'meow'},
+        formdata={'login':'ahmedbilal', 'password':'ahmedbilalkhalid', 'authenticity_token':authenticity_token},
         callback=self.is_login_successfull,
         meta = {'url': response.meta['url']},
         dont_filter = True)
@@ -60,14 +59,12 @@ class GithubRepos(scrapy.Spider):
                 yield Request(response.meta['url'], callback=self.read_name_from_settings, dont_filter = True)
 
     def read_name_from_settings(self, response):
-        print("HTTP Status", response.status)
         if b"Signed in as" in response.body:
             repo_name = response.url.split("/")[4]  # http://website.domain/username/repository/settings
             repo_name_from_settings = response.css("input[id='rename_field']::attr(value)").extract_first()
-
             yield { repo_name: repo_name_from_settings }
         
         else:
             self.logger.info("User not logged in - read_name_from_settings")
-            print("calling login with url", response.meta['url'])
+            self.logger.info("calling login with url", response.meta['url'])
             yield Request(self.login_url, callback=self.login, meta={'url':response.meta['url']}, dont_filter = True)
