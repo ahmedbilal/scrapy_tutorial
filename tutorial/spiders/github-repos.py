@@ -43,7 +43,7 @@ class GithubRepos(scrapy.Spider):
         print("authenticity: ", authenticity_token)
         print("Logging for", response.meta['url'])
         return scrapy.FormRequest.from_response(response,
-        formdata={'login':'ahmedbilal', 'password':'ahmedbilalkhalid'},
+        formdata={'login':'meowmeow', 'password':'meow'},
         callback=self.is_login_successfull,
         meta = {'url': response.meta['url']},
         dont_filter = True)

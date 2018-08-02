@@ -34,3 +34,9 @@ rm emails.jl; scrapy crawl emails -o emails.jl
 cd tutorial
 scrapy crawl jstrackscrap
 ```
+
+## How to run github_repos crawler (post request, session management and recovery task)
+**Note:** Insert your github username and password at line#46 of **spiders/github-repos.py**
+```bash
+clear; rm repo_description.jl; scrapy crawl github-repos -o repo_description.jl
+```
