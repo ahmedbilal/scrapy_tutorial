@@ -36,6 +36,10 @@ scrapy crawl jstrackscrap
 ```
 
 ## How to run github_repos crawler (post request, session management and recovery task)
+**Github-repos spider log in to Github and fetches all of user's repo links.
+Then it have to go to each repo's setting and fetches its name. But, the twist is that we will break session(remove cookies) with some random probability before accessing repo's setting (thus creating an effect that the website break our session due to some reason).
+The crawler should know that session is broken and should restablish it**
+
 **Note:** Insert your github username and password at line#46 of **spiders/github-repos.py**
 ```bash
 clear; rm repo_description.jl; scrapy crawl github-repos -o repo_description.jl
