@@ -17,23 +17,28 @@ class GithubRepos(scrapy.Spider):
                 print("REPO:", repo_name)
                 repo_link = repo.css("a::attr(href)").extract_first()
 
-                # authenticity_token = response.css("form[class='logout-form'] input[name='authenticity_token']::attr(value)").extract_first()
-                # logout_form_data = {"authenticity_token": authenticity_token}
-                # yield scrapy.FormRequest.from_response(response, callback=self.dead, meta={'dont_redirect': True, 'handle_httpstatus_all':True}, formcss="form[class='logout-form']", method='POST', formdata=logout_form_data)
-            
-                yield response.follow(repo_link + '/settings', meta={'dont_redirect': True, 'handle_httpstatus_all':True}, callback=self.read_name_from_settings)
+                yield response.follow(repo_link + '/settings', 
+                meta={'url':response.urljoin(repo_link) + '/settings',
+                'dont_redirect': True,
+                'handle_httpstatus_all':True,
+                'dont_merge_cookies': True},
+                callback=self.read_name_from_settings,
+                dont_filter = True)
         else:
             self.logger.info("User not logged in")
-            yield Request(self.login_url, callback=self.login)
+            yield Request(self.login_url, callback=self.login, meta={'url':self.start_urls[0]},
+            dont_filter = True)
 
 
     def login(self, response):
         authenticity_token = response.css("form input[name='authenticity_token']::attr(value)").extract_first()
         print("authenticity: ", authenticity_token)
+        print("Logging for", response.meta['url'])
         return scrapy.FormRequest.from_response(response,
         formdata={'login':'ahmedbilal', 'password':'ahmedbilalkhalid'},
-        callback=self.is_login_successfull
-        )
+        callback=self.is_login_successfull,
+        meta = {'url': response.meta['url']},
+        dont_filter = True)
 
     def is_login_successfull(self, response):
         if b'Incorrect username' in response.body:
@@ -41,13 +46,12 @@ class GithubRepos(scrapy.Spider):
             yield {'Message': 'Please write your github username and password at github_emails/spiders/github_emails.py at line 12'}
         else:  # success
             self.logger.info("Logged in successfully")
-            yield scrapy.Request('https://github.com/settings/repositories',callback=self.parse)
+            if response.meta['url'] == self.start_urls[0]:
+                yield scrapy.Request(self.start_urls[0],callback=self.parse, dont_filter = True)
+            else:
+                yield Request(response.meta['url'], callback=self.read_name_from_settings, dont_filter = True)
 
     def read_name_from_settings(self, response):
-        # authenticity_token = response.css("form[class='logout-form'] input[name='authenticity_token']::attr(value)").extract_first()
-        # logout_form_data = {"authenticity_token": authenticity_token}
-        # yield scrapy.FormRequest.from_response(response, callback=self.dead, meta={'dont_redirect': True, 'handle_httpstatus_all':True}, formcss="form[class='logout-form']", method='POST', formdata=logout_form_data)
-        # logged_out = True    
         print("HTTP Status", response.status)
         if b"Signed in as" in response.body:
             repo_name = response.url.split("/")[4]  # http://website.domain/username/repository/settings
@@ -56,15 +60,6 @@ class GithubRepos(scrapy.Spider):
             yield { repo_name: repo_name_from_settings }
         
         else:
-            self.logger.info("User not logged in")
-            yield scrapy.Request(self.login_url, callback=self.login)
-
-        authenticity_token = response.css("form[class='logout-form'] input[name='authenticity_token']::attr(value)").extract_first()
-        logout_form_data = {"authenticity_token": authenticity_token}
-        yield scrapy.FormRequest.from_response(response, callback=self.dead, meta={'dont_redirect': True, 'handle_httpstatus_all':True}, formcss="form[class='logout-form']", method='POST', formdata=logout_form_data)
-        
-    
-    def dead(self, response):
-
-        print("Logged out")
-        return None
+            self.logger.info("User not logged in - read_name_from_settings")
+            print("calling login with url", response.meta['url'])
+            yield Request(self.login_url, callback=self.login, meta={'url':response.meta['url']}, dont_filter = True)
