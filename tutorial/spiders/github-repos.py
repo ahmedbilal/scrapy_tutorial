@@ -51,7 +51,7 @@ class GithubRepos(scrapy.Spider):
     def is_login_successfull(self, response):
         if b'Incorrect username' in response.body:
             self.logger.error("Invalid username or password")
-            yield {'Message': 'Please write your github username and password at github_emails/spiders/github_emails.py at line 12'}
+            yield {'Message': 'Please write your github username and password at at line#46 of **spiders/github-repos.py'}
         else:  # success
             self.logger.info("Logged in successfully")
             if response.meta['url'] == self.start_urls[0]:
